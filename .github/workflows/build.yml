@@ -1,0 +1,59 @@
+name: Build
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Duststreamer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Determine Version String
+        id: version
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "APP_VERSION=${{ github.ref_name }}-${SHORT_SHA}" >> $GITHUB_ENV
+
+      - name: Build Docker image
+        run: >
+          docker build 
+          --build-arg DUSTSTREAMER_VERSION="${{ env.APP_VERSION }}" 
+          -t duststreamer-build .
+
+      - name: Extract binary from image
+        run: |
+          docker create --name extractor duststreamer-build
+          docker cp extractor:/duststreamer ./duststreamer
+          docker rm extractor
+
+      - name: Upload Workspace Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: duststreamer-aarch64-${{ env.APP_VERSION }}
+          path: ./duststreamer
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: hypfer/upload-release-asset@v1.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./duststreamer
+          asset_name: duststreamer-aarch64
+          asset_content_type: binary/octet-stream

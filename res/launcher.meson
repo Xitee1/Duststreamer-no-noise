@@ -1,0 +1,9 @@
+
+if not get_option('gst-full').disabled()
+  executable('duststreamer',
+    'duststreamer.c',
+    dependencies : gst_full_dep,
+    c_args : ['-DHAVE_CONFIG_H', '-DGST_STATIC_COMPILATION'],
+    install : false,
+  )
+endif
