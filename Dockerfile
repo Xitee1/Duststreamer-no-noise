@@ -25,8 +25,9 @@ RUN printf '#!/bin/sh\nexec zig cc -target aarch64-linux-musl -mcpu=cortex_a53 "
 WORKDIR /root/
 
 ARG GST_REPO_URL=https://gitlab.freedesktop.org/vivia/gstreamer.git
+ARG GST_TAG=dustsrc_1.28.5
 RUN for i in 1 2 3 4 5 6 7 8 9 10; do \
-        git clone --depth=1 --branch=dustsrc "$GST_REPO_URL" gstreamer && break \
+        git clone --depth=1 --branch="${GST_TAG}" "$GST_REPO_URL" gstreamer && break \
         || { echo "clone attempt $i failed, retrying..."; rm -rf gstreamer; sleep 5; }; \
     done && test -d gstreamer
 
