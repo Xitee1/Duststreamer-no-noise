@@ -162,7 +162,6 @@ on_eos(GstBus *bus G_GNUC_UNUSED, GstMessage *msg G_GNUC_UNUSED, gpointer data)
 {
     GstElement *pipeline = GST_ELEMENT(data);
 
-    g_print("EOS\n");
     gst_element_post_message(pipeline,
         gst_message_new_application(GST_OBJECT(pipeline),
             gst_structure_new_empty("duststreamer-quit")));
