@@ -43,42 +43,10 @@ COPY res/aarch64-musl.ini /root/aarch64-musl.ini
 WORKDIR /root/gstreamer
 
 RUN for i in 1 2 3 4 5 6 7 8 9 10; do \
-        rm -rf build && \
-        meson setup build \
-            --cross-file /root/aarch64-musl.ini \
-            --default-library=static \
-            --buildtype=release \
-            -Dauto_features=disabled \
-            -Dorc=enabled \
-            -Dorc-compiler=disabled \
-            -Dorc-source=subproject \
-            -Dprefix=/root/gst-install \
-            -Dgst-full=enabled \
-            -Dgst-full-target-type=static_library \
-            -Dgst-full-plugins="*" \
-            -Dbase=enabled -Dgood=enabled -Dugly=disabled -Dbad=enabled -Dlibav=enabled \
-            -Drs=disabled -Dges=disabled -Ddevtools=disabled -Drtsp_server=disabled \
-            -Dgst-examples=disabled -Dpython=disabled -Dsharp=disabled -Dgtk=disabled \
-            -Dintrospection=disabled -Dtools=disabled -Dgpl=enabled \
-            -DFFmpeg:gpl=enabled \
-            -DFFmpeg:encoders=enabled \
-            -DFFmpeg:mpeg1video_encoder=enabled \
-            -DFFmpeg:mjpeg_encoder=enabled \
-            -Dgst-plugins-bad:dustsrc=enabled \
-            -Dgst-plugins-bad:mpegtsmux=enabled \
-            -Dgst-plugins-good:udp=enabled \
-            -Dgst-plugins-good:jpeg=enabled \
-            -Dgst-plugins-good:videofilter=enabled \
-            -Dgst-plugins-good:v4l2=enabled \
-            -Dgst-plugins-good:v4l2-probe=false \
-            -Dgst-plugins-base:videoconvertscale=enabled \
-            -Dgst-plugins-base:videorate=enabled \
+        meson subprojects download orc glib libjpeg-turbo FFmpeg pcre2 gvdb libffi zlib  \
         && break \
-        || { echo "=== meson setup attempt $i failed, retrying... ==="; sleep 10; }; \
-    done && test -f build/build.ninja
-
-RUN meson compile -C build
-
+        || { echo "=== subproject download attempt $i failed, retrying... ==="; sleep 10; }; \
+    done
 
 COPY res/duststreamer.c /root/gstreamer/duststreamer/duststreamer.c
 COPY res/launcher.meson /root/gstreamer/duststreamer/meson.build
@@ -86,7 +54,8 @@ RUN echo "subdir('duststreamer')" >> /root/gstreamer/meson.build
 
 ARG DUSTSTREAMER_VERSION="unknown"
 
-RUN meson setup build --reconfigure \
+RUN meson setup build \
+        --wrap-mode=nodownload \
         --cross-file /root/aarch64-musl.ini \
         --default-library=static \
         --buildtype=release \
