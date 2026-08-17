@@ -247,16 +247,20 @@ main(int argc, char **argv)
 
     gchar *launch_str = NULL;
 
+    /* The default EPZS motion search dominates encode time and the SoC is already
+     * saturated by ava. xone is a single-iteration search that still tracks motion,
+     * unlike zero, which would fall back to intra whenever the robot is driving. */
+
     if (platform == PLATFORM_DREAME_MR813 || platform == PLATFORM_DREAME_MR536) {
         g_printerr("duststreamer: platform %s -> source element: dustsrc (device: %s)\n",
                    opt_platform, opt_device);
         launch_str = g_strdup_printf(
             "dustsrc name=cam_src device=%s capture-width=%d capture-height=%d capture-framerate=%d/1 ! "
             "queue name=q_src leaky=downstream max-size-buffers=2 ! "
-            "videoconvert ! "
             "videorate ! "
             "video/x-raw,framerate=%d/1 ! "
-            "avenc_mpeg1video bitrate=%d ! "
+            "videoconvert ! "
+            "avenc_mpeg1video bitrate=%d motion-est=xone ! "
             "mpegtsmux alignment=7 ! "
             "queue name=q_sink ! "
             "udpsink host=%s port=%d sync=false",
@@ -272,7 +276,7 @@ main(int argc, char **argv)
             "queue name=q_src leaky=downstream max-size-buffers=2 ! "
             "videorate ! "
             "video/x-raw,framerate=%d/1 ! "
-            "avenc_mpeg1video bitrate=%d ! "
+            "avenc_mpeg1video bitrate=%d motion-est=xone ! "
             "mpegtsmux alignment=7 ! "
             "queue name=q_sink ! "
             "udpsink host=%s port=%d sync=false",
